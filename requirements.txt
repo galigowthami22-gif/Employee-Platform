@@ -1,0 +1,16 @@
+fastapi
+fastapi-mail
+uvicorn
+sqlalchemy
+pymysql
+alembic
+python-dotenv
+pydantic-settings
+python-jose
+passlib[bcrypt]
+python-multipart
+email-validator
+redis
+slowapi
+pytest
+reportlab
