@@ -1,0 +1,46 @@
+# Development Environment Configuration
+# Overrides default.yaml for development
+
+server:
+  port: 8000
+  workers: 1
+  reload: true
+
+database:
+  pool_size: 5
+  echo: true
+
+cache:
+  ttl: 300  # 5 minutes for development
+
+logging:
+  level: "DEBUG"
+  file: "logs/stackly-dev.log"
+
+security:
+  cors_origins:
+    - "http://localhost:3000"
+    - "http://localhost:8080"
+    - "http://localhost:3001"
+  rate_limit_requests: 1000  # Higher limit for development
+  rate_limit_window: 60
+
+features:
+  advanced_analytics: true
+  mobile_app_sync: true
+
+# Development: Use SQLite or local MySQL
+database:
+  url: "mysql+pymysql://root:password@localhost:3306/stackly_erp_dev"
+
+# Development email: Print to console
+email:
+  backend: "console"
+
+# Development: No real SMS
+sms:
+  backend: "console"
+
+# Payment: Use test keys
+payment:
+  stripe_mode: "test"

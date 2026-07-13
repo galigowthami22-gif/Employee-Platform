@@ -1,8 +1,13 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+import logging
+
 from core.database import Base, engine
+from core.config import settings, get_settings, config_loader, feature_manager
+from middlewares.multi_tenancy_middleware import MultiTenancyMiddleware
 from routers.auth_router import router as auth_router
 from routers.role_router import router as role_router
+from routers.organization_router import router as organization_router
 from routers.department_router import router as department_router
 from routers.designation_router import router as designation_router
 from routers.employee_router import router as employee_router
@@ -26,7 +31,13 @@ from routers.report_router import router as report_router
 from routers.dashboard_router import router as dashboard_router
 from middlewares.audit_middleware import AuditMiddleware
 
-Base.metadata.create_all(bind=engine)
+if settings.DEBUG:
+    try:
+        Base.metadata.create_all(bind=engine, checkfirst=True)
+    except Exception as exc:
+        logging.warning("Database schema initialization skipped: %s", exc)
+else:
+    logging.info("Database schema creation skipped on startup; use Alembic migrations instead.")
 
 tags_metadata = [
     {
@@ -83,40 +94,58 @@ tags_metadata = [
     }]
 
 app = FastAPI(
-    title="ERP Management System",
-    version="1.0.0",
+    title=settings.APP_NAME,
+    version=settings.APP_VERSION,
     description="""
-    Enterprise Resource Planning System
-
+    Enterprise Resource Planning System - Complete Platform
+    
+    Features:
+    - Multi-tenant Architecture
+    - Role-Based Access Control (RBAC)
+    - HR & Payroll Management
+    - Inventory & Warehouse Management
+    - Sales & Procurement
+    - Finance & Accounting
+    - Project Management
+    - CRM & Lead Management
+    - Reports & Analytics
+    - Workflow Automation
+    - Audit & Compliance
+    
     Modules:
-    - Authentication
+    - Authentication & Authorization
     - Employee Management
-    - Attendance
-    - Leave
-    - Payroll
-    - Inventory
+    - Attendance & Leave
+    - Payroll Processing
+    - Inventory Management
     - Project Management
     - CRM
     - Support Tickets
     - Notifications
     - Audit Logs
-    - Reports
-    - Dashboard
+    - Reports & Dashboards
     """,
-    docs_url="/docs",
-    redoc_url="/redoc",
+    docs_url=settings.DOCS_URL,
+    redoc_url=settings.REDOC_URL,
+    openapi_url=settings.OPENAPI_URL,
     openapi_tags=tags_metadata
 )
 
-app.add_middleware(AuditMiddleware)
-
+# Add middleware stack (order matters)
+# 1. CORS first
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 2. Multi-tenancy isolation
+app.add_middleware(MultiTenancyMiddleware)
+
+# 3. Audit middleware
+app.add_middleware(AuditMiddleware)
 
 @app.get("/", tags=["Health"])
 def health_check():
@@ -124,29 +153,61 @@ def health_check():
         "message": "ERP API Running Successfully",
         "version": "1.0.0"}
 
-app.include_router(auth_router)
-app.include_router(role_router)
-app.include_router(department_router)
-app.include_router(designation_router)
-app.include_router(employee_router)
-app.include_router(attendance_router)
-app.include_router(leave_router)
-app.include_router(salary_router)
-app.include_router(category_router)
-app.include_router(product_router)
-app.include_router(supplier_router)
-app.include_router(inventory_router)
-app.include_router(project_router)
-app.include_router(task_router)
-app.include_router(timesheet_router)
-app.include_router(client_router)
-app.include_router(lead_router)
-app.include_router(opportunity_router)
-app.include_router(ticket_router)
-app.include_router(notification_router)
-app.include_router(audit_router)
-app.include_router(report_router)
-app.include_router(dashboard_router)
+def register_router(app: FastAPI, router) -> None:
+    for route in getattr(router, "routes", []):
+        if not getattr(route, "path", None):
+            continue
+        if getattr(route, "include_in_schema", True) is False:
+            continue
+        app.add_api_route(
+            path=route.path,
+            endpoint=route.endpoint,
+            methods=list(route.methods),
+            name=getattr(route, "name", None),
+            include_in_schema=getattr(route, "include_in_schema", True),
+            response_model=getattr(route, "response_model", None),
+            status_code=getattr(route, "status_code", None),
+            tags=getattr(route, "tags", None),
+            dependencies=getattr(route, "dependencies", None),
+            summary=getattr(route, "summary", None),
+            description=getattr(route, "description", None),
+            responses=getattr(route, "responses", None),
+            deprecated=getattr(route, "deprecated", False),
+            operation_id=getattr(route, "operation_id", None),
+        )
+
+
+def register_routers(app: FastAPI) -> None:
+    for router in [
+        auth_router,
+        role_router,
+        organization_router,
+        department_router,
+        designation_router,
+        employee_router,
+        attendance_router,
+        leave_router,
+        salary_router,
+        category_router,
+        product_router,
+        supplier_router,
+        inventory_router,
+        project_router,
+        task_router,
+        timesheet_router,
+        client_router,
+        lead_router,
+        opportunity_router,
+        ticket_router,
+        notification_router,
+        audit_router,
+        report_router,
+        dashboard_router,
+    ]:
+        register_router(app, router)
+
+
+register_routers(app)
 
 @app.get("/ping", tags=["Health"])
 def ping():

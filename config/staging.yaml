@@ -1,0 +1,52 @@
+# Staging Environment Configuration
+# Overrides default.yaml for staging
+
+server:
+  port: 8000
+  workers: 4
+  reload: false
+
+database:
+  pool_size: 30
+  echo: false
+
+cache:
+  ttl: 1800  # 30 minutes
+
+logging:
+  level: "INFO"
+  file: "logs/stackly-staging.log"
+
+security:
+  cors_origins:
+    - "https://staging.stackly.com"
+    - "https://app-staging.stackly.com"
+  rate_limit_requests: 500
+  rate_limit_window: 60
+
+features:
+  advanced_analytics: true
+  mobile_app_sync: true
+
+# Staging: Use staging database
+database:
+  url: "mysql+pymysql://${DB_USER}:${DB_PASSWORD}@staging-db.stackly.com:3306/stackly_erp_staging"
+
+# Staging: Use real email service (staging account)
+email:
+  backend: "smtp"
+  smtp_server: "smtp.sendgrid.net"
+
+# Staging: Use real SMS service (staging account)
+sms:
+  backend: "twilio"
+  provider: "twilio_staging"
+
+# Payment: Use test keys
+payment:
+  stripe_mode: "test"
+
+# Backup: More frequent
+backup:
+  schedule: "0 2 * * *"  # 2 AM daily
+  retention_days: 60  # 2 months

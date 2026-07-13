@@ -1,0 +1,99 @@
+# Default Configuration
+# This configuration applies to all environments unless overridden
+
+app:
+  name: "Stackly ERP"
+  version: "1.0.0"
+  description: "Enterprise Resource Planning Platform"
+
+server:
+  host: "0.0.0.0"
+  port: 8000
+  workers: 4
+  reload: false
+
+database:
+  pool_size: 20
+  max_overflow: 10
+  echo: false
+  use_connection_pooling: true
+
+cache:
+  enabled: true
+  ttl: 3600
+  backend: "redis"
+
+search:
+  enabled: false
+  backend: "elasticsearch"
+
+security:
+  cors_origins:
+    - "http://localhost:3000"
+    - "http://localhost:8080"
+  allowed_hosts:
+    - "localhost"
+    - "127.0.0.1"
+  rate_limit_enabled: true
+  rate_limit_requests: 100
+  rate_limit_window: 60
+
+features:
+  mfa_enabled: true
+  payroll_automation: true
+  advanced_analytics: false
+  multi_currency: false
+  mobile_app_sync: false
+  audit_trails: true
+  workflow_automation: true
+  bulk_operations: true
+  multi_tenancy: true
+
+pagination:
+  default_page_size: 20
+  max_page_size: 100
+
+logging:
+  level: "INFO"
+  format: "json"
+  file: "logs/stackly.log"
+  max_size: 10485760  # 10MB
+  backup_count: 10
+
+email:
+  smtp_server: "smtp.gmail.com"
+  smtp_port: 587
+  use_tls: true
+  retry_attempts: 3
+  retry_delay: 5
+
+sms:
+  provider: "twilio"
+  retry_attempts: 3
+
+file_upload:
+  directory: "uploads"
+  max_size: 52428800  # 50MB
+  allowed_extensions:
+    - "pdf"
+    - "doc"
+    - "docx"
+    - "xls"
+    - "xlsx"
+    - "jpg"
+    - "jpeg"
+    - "png"
+    - "zip"
+
+backup:
+  enabled: true
+  schedule: "0 23 * * *"  # 11 PM daily
+  retention_days: 30
+
+api:
+  version: "v1"
+  prefix: "/api/v1"
+  docs_enabled: true
+  openapi_url: "/openapi.json"
+  docs_url: "/docs"
+  redoc_url: "/redoc"

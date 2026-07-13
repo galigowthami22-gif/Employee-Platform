@@ -14,8 +14,7 @@ if is_testing:
     engine = create_engine(
         "sqlite:///:memory:",
         connect_args={"check_same_thread": False},
-        poolclass=StaticPool,
-    )
+        poolclass=StaticPool)
 else:
     engine = create_engine(settings.DATABASE_URL, pool_pre_ping=True)
 

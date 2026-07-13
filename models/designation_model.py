@@ -1,9 +1,5 @@
-from sqlalchemy import Column, Integer, String
-from core.base import Base
+"""Compatibility shim for the designation model."""
 
-class Designation(Base):
-    __tablename__ = "designations"
+from models.employee_model import Designation
 
-    id = Column(Integer, primary_key=True)
-    title = Column(String(100), unique=True, nullable=False)
-    description = Column(String(255))
+__all__ = ["Designation"]

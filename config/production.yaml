@@ -1,0 +1,94 @@
+# Production Environment Configuration
+# Overrides default.yaml for production
+
+server:
+  port: 8000
+  workers: 16
+  reload: false
+
+database:
+  pool_size: 50
+  max_overflow: 20
+  echo: false
+  use_read_replicas: true
+
+cache:
+  ttl: 3600
+  redis_cluster: true
+
+logging:
+  level: "WARNING"
+  file: "logs/stackly-prod.log"
+  max_size: 104857600  # 100MB
+  backup_count: 30
+
+security:
+  cors_origins:
+    - "https://stackly.com"
+    - "https://app.stackly.com"
+  allowed_hosts:
+    - "stackly.com"
+    - "app.stackly.com"
+  rate_limit_requests: 200
+  rate_limit_window: 60
+  ssl_redirect: true
+  hsts_enabled: true
+  hsts_max_age: 31536000
+
+features:
+  advanced_analytics: true
+  mobile_app_sync: true
+
+# Production: Use production database with replication
+database:
+  url: "mysql+pymysql://${DB_USER}:${DB_PASSWORD}@prod-db-primary.stackly.com:3306/stackly_erp"
+  read_replicas:
+    - "mysql+pymysql://${DB_USER}:${DB_PASSWORD}@prod-db-replica-1.stackly.com:3306/stackly_erp"
+    - "mysql+pymysql://${DB_USER}:${DB_PASSWORD}@prod-db-replica-2.stackly.com:3306/stackly_erp"
+
+# Production: Use production email service
+email:
+  backend: "smtp"
+  smtp_server: "smtp.sendgrid.net"
+  from_address: "noreply@stackly.com"
+  retry_attempts: 5
+
+# Production: Use production SMS service
+sms:
+  backend: "twilio"
+  provider: "twilio_production"
+
+# Payment: Use live keys
+payment:
+  stripe_mode: "live"
+
+# Backup: Very frequent and long retention
+backup:
+  enabled: true
+  schedule: "0 1 * * *"  # 1 AM daily
+  retention_days: 365  # 1 year
+  incremental_daily: true
+  full_weekly: true
+  replication: true
+  cloud_backup: true
+
+# Monitoring: Enable all
+monitoring:
+  enabled: true
+  metrics_port: 9090
+  traces_enabled: true
+  logs_aggregation: true
+
+# Security: Maximum hardening
+security:
+  enable_waf: true
+  enable_ddos_protection: true
+  enable_vulnerability_scanning: true
+  certificate_path: "/etc/letsencrypt/live/stackly.com/"
+  certificate_auto_renewal: true
+
+# CDN configuration
+cdn:
+  enabled: true
+  provider: "cloudflare"
+  cache_ttl: 86400  # 24 hours
